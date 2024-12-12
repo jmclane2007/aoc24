@@ -4,7 +4,7 @@ const sides = new Map();
 const area = new Map();
 
 function processInstructions() {
-  const input = fs.readFileSync("test.txt", "utf8");
+  const input = fs.readFileSync("input.txt", "utf8");
   const lines = input.split("\r\n");
   const grid = [];
   for(let i = 0; i < lines.length; i++) {
@@ -29,7 +29,6 @@ function processInstructions() {
   }
   let total = 0;
   for(const key of area.keys()) {
-    console.log(area.get(key), sides.get(key))
     total += (area.get(key) * sides.get(key));
   }
 
@@ -49,9 +48,9 @@ function dfs(grid: string[][], visited: boolean[][], row: number, col: number, c
 }
 
 function countSides(visited: boolean[][], id: number): number {
-  // Check all visited spots that are in a corner, one pass for each direction
   let totalSides = 0;
-  let top = false, bottom = false, left = false, right = false;
+  let top = false, bottom = false;
+  // Scan row by row and keep track of how often we have a valid cell, but with invalid above or below
   for(let i = 0; i < visited.length; i++) {
     for(let j = 0; j < visited[0].length; j++) {
       if(visited[i][j]) {
@@ -87,28 +86,44 @@ function countSides(visited: boolean[][], id: number): number {
     top = false;
     bottom = false;
   }
-  // for(let i = 0; i < visited[0].length; i++) {
-  //   for(let j = 0; j < visited.length; j++) {
-  //     if(visited[i][j]) {
-  //       if(!left) {
-  //         if(i === 0 || !visited[i][j-1]) {
-  //           left = true;
-  //           totalSides++;
-  //         } else {
-  //           left = false;
-  //         }
-  //       }
-  //       if(!right) {
-  //         if(i === visited[0].length - 1 || !visited[i][j+1]) {
-  //           right = true;
-  //           totalSides++;
-  //         } else {
-  //           right = false;
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+
+  // Same strategy, but column-major instead
+  let left = false, right = false;
+  for(let j = 0; j < visited[0].length; j++) {
+    for(let i = 0; i < visited.length; i++) {
+      if(visited[i][j]) {
+        if(!left) {
+          if(j === 0 || !visited[i][j-1]) {
+            left = true;
+            totalSides++;
+          } else {
+            left = false;
+          }
+        } else {
+          if(j > 0 && visited[i][j-1]) {
+            left = false;
+          }
+        }
+        if(!right) {
+          if(j === visited[0].length - 1 || !visited[i][j+1]) {
+            right = true;
+            totalSides++;
+          } else {
+            right = false;
+          }
+        } else {
+          if(j < visited[0].length - 1 && visited[i][j+1]) {
+            right = false;
+          }
+        }
+      } else {
+        left = false;
+        right = false;
+      }
+    }
+    left = false;
+    right = false;
+  }
   return totalSides;
 }
 
